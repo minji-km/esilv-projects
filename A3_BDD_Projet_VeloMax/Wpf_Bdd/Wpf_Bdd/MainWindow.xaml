@@ -1,0 +1,46 @@
+﻿<Window x:Class="Wpf_Bdd.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wpf_Bdd"
+        mc:Ignorable="d"
+        Title="VeloMax" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <ListBox x:Name="LbxUtilisateur" SelectionChanged="LbxUtilisateur_SelectionChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid ShowGridLines="False">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition Width="200"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="{Binding Nom}"></Label>
+                        <Label Grid.Column ="1" Content="- Utilisateur"></Label>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button
+            Name ="Bouton1"
+            Width ="195"
+            FontSize="16"
+            Height="65"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Content="Click"
+            Click="Button_Click" Margin="10,10,0,0"/>
+
+        <TextBlock
+            Name="txt"
+            HorizontalAlignment="Left" 
+            Margin="210,0,0,388" 
+            TextWrapping="Wrap" 
+            Text="Du texte" 
+            VerticalAlignment="Bottom" 
+            Height="22"/>
+
+
+
+    </Grid>
+</Window>
