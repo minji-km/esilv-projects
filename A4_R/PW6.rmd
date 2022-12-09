@@ -1,0 +1,132 @@
+---
+title: "PW6"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pressure, echo=FALSE}
+calc_acc = function(predicted, actual) {
+  mean(predicted == actual)
+}
+library(caTools)
+library(MASS)
+dataset<-read.csv("spam.csv")
+#dataset$spam=as.factor(dataset$spam)
+```
+```{r}
+set.seed(123)
+spam_ix=sample(1:nrow(dataset),nrow(dataset)/2)
+train= dataset[spam_ix,]
+test=dataset[-spam_ix,]
+
+classfier.logreg<-glm(spam~.,family="binomial",data=train)
+pred.glm<-predict(classfier.logreg,newdata=test,type="response")
+pred.glm_T_F= ifelse(pred.glm>=0.5,TRUE,FALSE)
+acc_logreg=calc_acc(pred.glm_T_F,test$spam)
+acc_logreg
+```
+
+#tree
+```{r}
+library(rpart.plot)
+spam_tree<-rpart(spam~.,data=train)
+rpart.plot(spam_tree)
+spam_tree_pred<-predict(spam_tree,newdata=test,type="matrix")
+
+```
+
+
+```{r}
+spam_tree_pred_T_F= ifelse(spam_tree_pred>=0.5,TRUE,FALSE)
+acc_tree=calc_acc(spam_tree_pred_T_F,test$spam)
+acc_tree
+```
+
+#bagging
+```{r}
+library(randomForest)
+spam_bagging<-randomForest(spam~.,data=train,mytry=57,n.trees=500)
+
+spam_bagg_pred<-predict(spam_bagging,newdata=test,type="class")
+spam_bagg_pred_T_F= ifelse(spam_bagg_pred>=0.5,TRUE,FALSE)
+acc_bagg=calc_acc(spam_bagg_pred_T_F,test$spam)
+acc_bagg
+```
+#Radnom forest
+```{r}
+spam_rf=randomForest(spam~.,data=train,mytry=8,n.trees=500)
+
+spam_rf_pred<-predict(spam_rf,newdata=test,type="class")
+spam_rf_pred_T_F= ifelse(spam_rf_pred>=0.5,TRUE,FALSE)
+acc_rf=calc_acc(spam_rf_pred_T_F,test$spam)
+acc_rf
+```
+
+```{r}
+library(gbm)
+test$spam01=ifelse(test$spam==FALSE,0,1)
+train$spam01=ifelse(train$spam==FALSE,0,1)
+spam_boost=gbm(spam01~.-spam,data=train,n.trees=5000, distribution="bernoulli",interaction.depth=4,shrinkage=0.01)
+spam_boost
+
+```
+
+```{r}
+spam_boost_pred<-predict(spam_boost,newdata=test,type="response")
+spam_boost_pred_T_F= ifelse(spam_boost_pred>=0.5,TRUE,FALSE)
+acc_boost=calc_acc(spam_boost_pred_T_F,test$spam)
+
+```
+
+```{r}
+library(xgboost)
+train_x = data.matrix(train[, -1])
+train_y = train[,1]
+
+test_x = data.matrix(test[, -1])
+test_y = test[, 1]
+xgb_train = xgb.DMatrix(data = train_x, label = train_y)
+xgb_test = xgb.DMatrix(data = test_x, label = test_y)
+
+xgbc = xgboost(data = xgb_train, max.depth = 4, nrounds = 1900)
+
+xgboost_pred = predict(xgbc, xgb_test)
+
+plot(xgboost_pred)
+pred_y =as.factor((levels(test_y))[round(xgboost_pred)])
+print(pred_y)
+
+acc_xg = calc_acc(pred_y, test_y)
+acc_xg
+```
+```{r}
+spam_acc=data.frame(
+  Model = c("Single Tree","Logistic Regression","Bagging","Random Forest","Boosting","XGBoost"),
+  TestAccuracy= c(acc_logreg,acc_tree,acc_bagg,acc_rf,acc_boost,acc_xg)
+)
+spam_acc
+```
+
+
+```{r}
+library(caret)
+library(randomForest)
+library(mlbench)
+
+control <- trainControl(method='cv', 
+                        number=5)
+#Metric compare model is Accuracy
+metric <- "Accuracy"
+tunegrid <- expand.grid(.shrinkage =c(0.001,0.01),.n.trees = c(2,5,20),.interaction.depth = c(2,3),.n.minobsinnode =c( 4,1) )
+gbm_cv <- train(spam~., 
+                    data=train, 
+                    method='gbm', 
+                    metric='Accuracy', 
+                    tuneGrid=tunegrid, 
+                    trControl=control, verbose=FALSE)
+print(gbm_cv)
+
+```

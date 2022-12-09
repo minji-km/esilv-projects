@@ -1,0 +1,193 @@
+---
+title: "PW7"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pressure, echo=FALSE}
+library(FactoMineR)
+library(factoextra)
+```
+```{r}
+data(decathlon2)
+head(decathlon2)
+```
+
+#3
+```{r}
+str(decathlon2)
+```
+
+#4
+
+```{r}
+decathlon2.active<-decathlon2[1:23,1:10]
+
+```
+
+```{r}
+res.pca<-PCA(decathlon2.active,graph=FALSE)
+
+```
+
+#q6
+```{r}
+print(res.pca)
+```
+#q7
+```{r}
+eig.val<-get_eigenvalue(res.pca)
+eig.val
+
+#Ici le tableau de retour la col2[i]=nblignes*col1[i]
+```
+
+#q8
+```{r}
+fviz_eig(res.pca,addlabels=TRUE,ylim=c(0,50))
+
+
+```
+
+#q9
+
+```{r}
+fviz_pca_var(res.pca,col.var="black")
+```
+
+#q10
+```{r}
+head(res.pca$var$cos2,4)
+```
+
+
+#q11
+```{r}
+fviz_pca_var(res.pca,col.var="cos2",gradient.cols=c("#00AFBB","#E7B800","#FC4E07"),repel=TRUE)
+
+```
+#q12
+```{r}
+res.desc<-dimdesc(res.pca,axes=c(1,2),proba=0.05)
+res.desc$Dim.1
+res.desc$Dim.2
+```
+
+#q13
+
+```{r}
+ind<-get_pca(res.pca)
+```
+
+#q14
+
+```{r}
+fviz_pca_ind(res.pca,col.ind="cos2",gradient.cols=c("#00AFBB","#E7B800","#FC4E07"),repel=TRUE)
+```
+
+
+#q15
+
+```{r}
+fviz_pca_ind(res.pca,pointsize="cos2",pointshape=21,fill="#E7B800",repel=TRUE)
+```
+
+
+#q16
+
+#q13
+
+```{r}
+ind<-get_pca(res.pca)
+```
+
+#q14
+
+```{r}
+fviz_pca_ind(res.pca,col.ind="cos2",gradient.cols=c("#00AFBB","#E7B800","#FC4E07"),repel=TRUE)
+```
+
+
+#q16
+
+```{r}
+res.pca<-PCA(decathlon2,ind.sup=24:27,quanti.sup=11.12,quali.sup=13,graph=FALSE)
+```
+#q17
+```{r}
+res.pca$quanti.sup
+fviz_pca_var(res.pca)
+```
+
+#q18
+```{r}
+res.pca$ind.sup
+p<-fviz_pca_ind(res.pca,col.ind.sup="blue",repel=TRUE)
+p<-fviz_add(p,res.pca$quali.sup$coord,color="red")
+p
+```
+
+#q19
+```{r}
+fviz_pca_ind(res.pca,habillage=13,addEllipses=TRUE,ellipse.type="confidence",palette="jco",repel=TRUE)
+
+```
+#The first component positively correlated to "strength" #competations and negatively to "speed ones" The second one is #linked to endurance and pole vault.
+#The right side is for better points and smaller rank, i.,e. best #players. The opposite profiles at at the left.
+
+#When looking at the points representing "Decastar" and
+#"Olympic Games", we notice that this last one has higher
+#coordinates on the first axis than the first one. This shows
+#an evolution in the performances of the athletes. All the
+#athletes who participated to the two competitions have then
+#slightly better results for the Olympic Games.
+#We can see that the points which represent the same
+#individual are in the same direction. For example, Sebrle got
+#good results in both competition but the point which
+#represents his performance during the O.G. is more extreme.
+#Sebrle got more points during the O.G. than during the
+#Decastar.
+
+#Two interpretations can be made:
+
+#1 - Athletes who participate in the O.G. are better than
+#those who participate in the Decastar
+
+#2- Athletes do their best for the O.G. (more motivated, more
+#trained)
+
+ 
+#The `dimdesc` tables of the description of the two principal
+# our first interpretation.
+
+#However, there is no difference between the points "Decastar"
+#and "Olympic Games" for the second axis. This means that the
+#athletes have improved their performance but did not change
+#profile (except for Zsivoczky who went from slow and strong
+#during the Decastar to fast and weak during the Olympic
+#Games).
+
+#q20
+
+```{r}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

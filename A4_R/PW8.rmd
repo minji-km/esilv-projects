@@ -1,0 +1,260 @@
+---
+title: "PW7"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#q1
+```{r }
+library(caTools)
+library(MASS)
+ligue <- read.csv("C:/Users/axelh/COURS/A4/MACHINE LEARNING/ligue1_17_18.csv", row.names=1, sep=";")
+library(factoextra)
+library(FactoMineR)
+dim(ligue)
+```
+
+
+
+#q2
+
+```{r}
+print(ligue[1:2,])
+print(length(ligue))
+```
+#q3
+```{r}
+pointsCards <-ligue[, c("Points","yellow.cards")]
+plot(pointsCards)
+```
+#q4
+```{r}
+k<-2
+km<-kmeans(pointsCards,centers=k,nstart=20)
+
+```
+
+```{r}
+print(km)
+```
+
+#q6
+```{r}
+km$centers
+
+```
+#q7
+```{r}
+points_equipe <- pointsCards$Points
+carton_jaune <- pointsCards$yellow.cards
+
+plot(points_equipe,carton_jaune,col=km$cluster,pch=19,cex=2)
+```
+
+
+#q8
+```{r}
+plot(points_equipe,carton_jaune,col=km$cluster,pch=19,cex=2)
+text(x = pointsCards, labels = rownames(pointsCards), col = km$cluster, pos = 3, cex = 0.75)
+
+
+points(km$centers,col=c("red","black"),pch=3,cex=3,lwd=3)
+
+```
+
+#q9
+```{r}
+km3<-kmeans(pointsCards,centers=3,nstart=20)
+km4<-kmeans(pointsCards,centers=4,nstart=20)
+
+plot(pointsCards, col = km3$cluster)
+points(km3$centers,col=c("red","black","green"),pch=3,cex=3,lwd=3)
+text(x = pointsCards, labels = rownames(pointsCards), col = km3$cluster, pos = 4, cex = 0.75)
+
+
+plot(pointsCards, col = km4$cluster)
+points(km4$centers,col=c("red","black","green","blue"),pch=3,cex=3,lwd=3)
+text(x = pointsCards, labels = rownames(pointsCards), col = km3$cluster, pos = 4, cex = 0.75)
+
+
+```
+
+#q10
+
+```{r}
+library(fpc)
+kmeansruns.result<-kmeansruns(pointsCards)
+kmeansruns.result
+```
+
+
+```{r}
+library(fpc)
+kmeansruns.result<-kmeansruns(ligue)
+kmeansruns.result
+```
+#Q15
+
+```{r}
+str(ligue)
+```
+```{r}
+
+pca_ligue<-princomp(ligue,cor=TRUE)
+```
+
+#q16
+```{r}
+fviz_pca_biplot(pca_ligue,repel=TRUE,col.var="blue",col.indv="696969")
+```
+
+#q17
+```{r}
+fviz_cluster(kmeansruns.result,data=ligue,palette=c("red","blue","green"),ggtheme=theme_minimal()   ,main="Clustering Plot")
+```
+
+
+
+#q18
+```{r}
+set.seed(345678)
+kme2 <- kmeans(pca_ligue$scores[, 1:2], centers = 3, nstart = 20)
+
+fviz_cluster(kme2,data=ligue,palette=c("red","blue","green"),ggtheme=theme_minimal()   ,main="Clustering Plot on first 2 pc")
+```
+
+###deuxiempartie
+#q19
+
+```{r}
+customer_data<-read.csv("customer.csv")
+
+
+```
+
+```{r}
+summary(customer_data)
+structure(customer_data)
+```
+
+
+
+
+
+```{r}
+library(magrittr)
+gradient.color <- list(low = "steelblue",  high = "white")
+                  customer_data[, -1] %>%    # Remove column 1 (ID)
+                  scale() %>%     # Scale variables
+                  get_clust_tendency(n = 50, gradient = gradient.color)
+
+```
+
+#q5
+```{r}
+library(NbClust)
+nb<-NbClust(customer_data,distance="euclidean",min.nc=2,max.nc=10,method="ward.D2")
+```
+#q6,q7
+```{r}
+hc <- hclust(dist(customer_data, method = "euclidean"), method = "average")
+hc
+plot(hc,hang = -0.01, cex = 0.7)
+
+```
+#q8
+```{r}
+fit<-cutree(hc,k=4)
+fit
+```
+
+#q9
+```{r}
+table(fit)
+```
+
+#q10
+```{r}
+plot(hc)
+rect.hclust(hc,k=4, border="red")
+
+```
+
+
+#q11
+```{r}
+plot(hc)
+rect.hclust(hc,k = 4, which = 2, border = "red")
+
+```
+
+#q12
+
+```{r}
+fviz_cluster(list(data = customer_data, cluster = fit))
+```
+#q13
+```{r}
+library(dendextend)
+hc1 <- hclust((dist(customer_data,method="euclidean")), method="centroid")
+hc2 <- hclust((dist(customer_data, method="euclidean")), method="complete")
+dend1 <- as.dendrogram((hc1))
+dend2 <- as.dendrogram((hc2))
+dend_list <- dendlist(dend1, dend2)
+tanglegram(dend1, dend2)
+
+```
+
+
+#q14
+#The quality of the alignment of the two trees can be measured using the function entanglement() (a 1 score is the best possible value).
+
+
+```{r}
+
+tanglegram(dend1, dend2,
+  highlight_distinct_edges = FALSE, # Turn-off dashed lines
+  common_subtrees_color_lines = FALSE, # Turn-off line colors
+  common_subtrees_color_branches = TRUE, # Color common branches 
+  main = paste("entanglement =", round(entanglement(dend_list), 2))
+  )
+
+```
+
+
+#q15
+
+```{r}
+dend1 <- customer_data %>% dist %>% hclust("com") %>% as.dendrogram
+dend2 <- customer_data %>% dist %>% hclust("single") %>% as.dendrogram
+dend3 <- customer_data %>% dist %>% hclust("ave") %>% as.dendrogram
+dend4 <- customer_data %>% dist %>% hclust("centroid") %>% as.dendrogram
+
+# Compute correlation matrix
+dend_list <- dendlist("Complete" = dend1, "Single" = dend2,
+                      "Average" = dend3, "Centroid" = dend4)
+cors <- cor.dendlist(dend_list)
+# Print correlation matrix
+round(cors, 2)
+
+```
+
+#q16
+
+
+```{r}
+library(cluster)
+#method to assess
+m <- c("average", "single","complete","ward")
+names(m) <- c("average", "single","complete","ward")
+
+#function to compute coefficient
+ac <- function(x){agnes(customer_data, method = x)$ac}
+library(purrr)
+map_dbl(m,ac)
+
+````

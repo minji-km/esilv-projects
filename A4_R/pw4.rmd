@@ -1,0 +1,192 @@
+---
+title: "PW4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r,echo=T,eval=T}
+setwd("C:/Users/axelh/COURS/A4/MACHINE LEARNING")
+datanet<-read.csv("Social_Network_Ads.csv")
+str(datanet)
+```
+
+
+```{r,echo=T,eval=T}
+summary(datanet)
+```
+#q3
+```{r,echo=T,eval=T}
+library(caTools)
+set.seed(123)
+spit = sample.split(datanet, SplitRatio=3/4)
+training_set=subset(datanet,split=TRUE)
+test_set=subset(datanet,split=FALSE)
+
+```
+
+#q4
+
+```{r,echo=T,eval=T}
+training_set[c(3,4)]=scale(training_set[c(3,4)])
+test_set[c(3,4)]=scale(test_set[c(3,4)])
+```
+
+#q5
+
+
+```{r,echo=T,eval=T}
+classifier<-glm(Purchased~Age,family=binomial,data=training_set)
+```
+
+#q7
+```{r,echo=T,eval=T}
+coef(classifier)
+```
+
+```{r,echo=T,eval=T}
+b0=coef(classifier)[1]
+b1=coef(classifier)[2]
+p<-function(x){return(1/(1+exp(-b0-b1*x)))}
+plot(training_set$Age,training_set$Purchased,col="blue")
+points(training_set$Age,p(training_set$Age),col="red")
+```
+
+#q8
+```{r,echo=T,eval=T}
+summary(classifier)
+```
+#Comme p values <0.05 alors on en conclue qu'il y a un lien entre age et purchased en terme de stat
+
+#q9
+```{r}
+
+classifier$aic
+```
+
+
+#q10
+```{r,echo=T,eval=T}
+#premiere possibilité
+plot(training_set$Age,training_set$Purchased)
+curve(predict(classifier, data.frame(Age=x), type="response"), add=TRUE)
+
+#avec le ggplot qui est mieux graphiquement
+library(ggplot2)
+ggplot(training_set, aes(x=Age, y=Purchased)) +
+  geom_point() +
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+
+```
+
+
+#q11
+```{r}
+classifier2<-glm(Purchased~Age+EstimatedSalary,family=binomial,data=training_set)
+classifier2$aic
+```
+#q12
+```{r}
+summary(classifier2)
+```
+#On voit que la p values est tjrs bien
+#q13 on compare les aic
+
+#q14
+```{r}
+prob_pred=predict(classifier,newdata=test_set[c("Age","EstimatedSalary")],type="response")
+
+```
+#q15
+```{r}
+y_pred=ifelse(prob_pred>0.5,1,0)
+```
+
+#q16
+```{r}
+cm=table(test_set[,5],y_pred)
+cm
+```
+
+
+#q17
+```{r}
+metrics <- function(CM) {
+                   acc = (CM[1,1]+CM[2,2])/(CM[1,1]+CM[1,2]+CM[2,1]+CM[2,2])
+                   spc = CM[1,1]/(CM[1,1]+CM[1,2])
+                   ses = CM[2,2]/(CM[2,2]+CM[2,1])
+                   my_list <- list("accuracy" = acc, "specificity" = spc, "sensitivity" = ses)
+                   return(my_list)}
+ 
+print(paste("accuracy: ",metrics(cm)$accuracy))
+
+  
+
+
+```
+```{r}
+
+print(paste("accuracy: ",metrics(cm)$accuracy))
+
+```
+
+
+
+#q
+
+
+#q19
+```{r}
+library(ROCR)
+score1 <- prediction(prob_pred,test_set[,5])
+performance(score1,"auc")
+## A performance instance
+##   'Area under the ROC curve'
+plot(performance(score1,"tpr","fpr"),col="green")
+prob_pred = predict(classifier2, newdata = test_set[c(3,4)], type="response")
+score2 <- prediction(prob_pred,test_set[,5])
+auc2 = as.numeric( performance(score2,"auc")@y.values)
+auc2
+## [1] 0.9171007
+plot(performance(score1,"tpr","fpr"),col="green")
+plot(performance(score2,"tpr","fpr"),col="blue",add=T)
+abline(0,1,lty=8, col='red')
+
+```
+
+#BONUS
+```{r}
+library(MASS)
+classifier3<-glm(Purchased~(Age+EstimatedSalary)^2,family=binomial,data=training_set)
+backward<-stepAIC(classifier3,direction="backward",trace=FALSE)
+
+backward$anova
+```
+#On compare classfier 2 et classifier 3
+```{r}
+prob_pred2=predict(classifier2,newdata=test_set[c("Age","EstimatedSalary")],type="response")
+score1 <- prediction(prob_pred2,test_set[,5])
+
+
+prob_pred2 = predict(classifier3, newdata = test_set[c(3,4)], type="response")
+score2 <- prediction(prob_pred2,test_set[,5])
+auc2 = as.numeric( performance(score2,"auc")@y.values)
+
+
+plot(performance(score1,"tpr","fpr"),col="green")
+plot(performance(score2,"tpr","fpr"),col="blue",add=T)
+abline(0,1,lty=8, col='red')
+
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,232 @@
+---
+title: "PW3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ex 1
+
+**1. ** We are going to use a dataset called Boston which is part of the MASS package. First install the MASS package and import it. 
+
+```{r,  echo=T, eval=T}
+library(MASS)
+dim(Boston)
+str(Boston)
+```
+
+
+```{r,  echo=T, eval=T}
+library(caTools)# required library for data splition
+set.seed(123)
+split = sample.split(Boston$medv, SplitRatio = 0.8)# returns true if observation goes to the Training set and false if observation goes to the test set.
+
+#Creating the training set and test set separately
+training_data = subset(Boston, split == TRUE)
+testing_data = subset(Boston, split == FALSE)
+
+
+# Check the dimensions of the new dataset
+dim(training_data)
+dim(testing_data)
+```
+```{r,  echo=T, eval=T}
+cor(training_data$medv, training_data$age)
+```
+
+```{r,  echo=T, eval=T}
+model <- lm(medv~age, data = training_data)
+model
+
+plot(training_data$age, training_data$medv,
+     col = "red",
+     pch = 20)
+
+abline(model, col = "blue", lwd =3)
+```
+```{r,  echo=T, eval=T}
+model2 <- lm(medv~age + log(lstat), data = training_data)
+model2
+
+
+rgl::plot3d(log(Boston$lstat),
+            Boston$age,
+            Boston$medv, type = "p",
+            xlab = "log(lstat)",
+            ylab = "age",
+            zlab = "medv", site = 5, lwd = 15)
+
+
+rgl::planes3d(model2$coefficients["log(lstat)"],
+              model2$coefficients["age"], -1,
+              model2$coefficients["(Intercept)"], alpha = 0.3, front = "line")
+
+```
+
+```{r,  echo=T, eval=T}
+summary(model2)
+```
+##7
+### re-explain the interpretation of the summary table
+### looking at the p-values all the predictors here are significant (compare p-value with the error etc..)
+##8
+### answer to this question in the summary table
+### the p-value of the Fisher's test (last line)
+### compare p-value with error
+### here the model is significant (at least one coefficient non-nul)
+##9
+```{r,  echo=T, eval=T}
+model3 <- lm(medv~., data = training_data)
+model3
+```
+##10
+```{r, echo=T, eval=T}
+model4<- lm(medv~.-lstat+log(lstat),data=training_data)
+summary(model4)
+```
+##11
+```{r, echo=T, eval=T}
+summary(model3)$r.squared
+summary(model4)$r.squared
+names(summary(model4))
+
+```
+##12
+```{r, echo=T, eval=T}
+round(cor(training_data),digit=2)
+```
+
+##13
+```{r, echo=T,eval=T}
+library(corrplot)
+corrplot.mixed(cor(training_data))
+```
+
+##15
+```{r,echo=T,eval=T}
+model5<- lm(medv~.-lstat+log(lstat)-tax,data=training_data)
+summary(model5)
+```
+
+##16
+```{r,echo=T,eval=T}
+# Save the testing median values for houses (testing y) in y
+y = testing_data$medv
+
+# Compute the predicted value for this y (y hat)
+y_hat = predict(model5, data.frame(testing_data))
+
+# Now we have both y and y_hat for our testing data. 
+# let's find the mean square error
+error = y-y_hat
+error_squared = error^2
+##model5
+MSE5 = mean(error_squared)
+MSE5
+test <- function(x){predict(x,data.frame(testing_data))}
+MSE2=mean((testing_data$medv-test(model2))^2)
+MSE2
+MSE3=mean((testing_data$medv-test(model3))^2)
+MSE3
+MSE4=mean((testing_data$medv-test(model4))^2)
+MSE4
+
+```
+
+##17
+```{r,echo=T,eval=T}
+table(training_data$chas)
+```
+##18
+
+```{r,echo=T,eval=T}
+boxplot(medv~chas, data=training_data)
+
+```
+
+##19
+
+```{r,echo=T,eval=T}
+aggregate(medv~chas, data=training_data, FUN=mean)
+
+
+```
+
+##20
+
+```{r,echo=T,eval=T}
+anovatest <- aov(medv~chas, data= training_data)
+anovatest
+
+
+
+```
+##21
+
+
+```{r,echo=T,eval=T}
+
+model21<-lm(medv~chas+crim,data=training_data)
+model21
+summary(model21)
+
+
+MSE21=mean((testing_data$medv-test(model21))^2)
+MSE21
+```
+
+##22
+
+
+```{r,echo=T,eval=T}
+
+model22<-lm(medv~.,data=training_data)
+model22
+summary(model22)
+
+
+MSE22=mean((testing_data$medv-test(model22))^2)
+MSE22
+```
+
+
+##23
+
+
+```{r,echo=T,eval=T}
+
+model23<-lm(medv~log(lstat)*age,data=training_data)
+model23
+summary(model23)
+
+
+MSE23=mean((testing_data$medv-test(model23))^2)
+MSE23
+```
+
+##24
+
+
+```{r,echo=T,eval=T}
+
+model24<-lm(medv~.^2,data=training_data)
+model24
+summary(model24)
+
+
+MSE24=mean((testing_data$medv-test(model24))^2)
+MSE24
+```
+
+##devoir
+```{r,echo=T,eval=T}
+#library(olsrr)
+#ols_step_forward_p(model)
+```
+
+
+
+
+

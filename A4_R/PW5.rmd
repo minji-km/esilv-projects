@@ -1,0 +1,226 @@
+---
+title: "PW5"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r pressure, echo=FALSE}
+library(MASS)
+library(caTools)
+Boston_idx=sample(1:nrow(Boston),nrow(Boston)/2)
+Boston_train= Boston[Boston_idx,]
+Boston_test=Boston[-Boston_idx,]
+
+```
+#Q2
+
+```{r}
+library(rpart)
+Boston_tree=rpart(medv ~.,data=Boston_train)
+
+```
+#q3
+
+```{r}
+plot(Boston_tree)
+text(Boston_tree, pretty = 0)
+title(main = "Regression Tree")
+```
+```{r}
+library(rpart.plot)
+rpart.plot(Boston_tree)
+
+```
+#q5
+```{r}
+summary(Boston_tree)
+
+```
+
+
+```{r}
+Boston_tree$cptable
+```
+
+
+```{r}
+printcp(Boston_tree)
+plotcp(Boston_tree)
+```
+
+#q6
+
+```{r}
+best_cv_error <- Boston_tree$cptable[which.min(Boston_tree$cptable[,4]),4]
+# achieved at :
+index_best <- which.min(Boston_tree$cptable[,4])
+
+# and equal to 
+Boston_tree$cptable[index_best,4]
+
+#with standard deviation 
+Boston_tree$cptable[index_best,5]
+
+#So, we want the smallest tree with xerror less than  0.3476751 + 0.06665483
+ # = 0.41
+# This is the tree with cp = 0.023674 
+
+Boston_tree <- prune(Boston_tree,cp=  0.023674)
+rpart.plot(Boston_tree)
+
+par(mfrow=c(1,1))
+X <- Boston_train$lstat
+Y <- Boston_train$rm
+Z <- Boston_train$medv
+ZZ = abs(Z)/max(Z)
+plot(Y~X,  col=rgb(0, 0, ZZ), main="trainins set")
+abline(v=5.3,lty=2,col=4)
+abline(h=7.4,lty=2,col=4)
+
+```
+#q6
+```{r}
+rmse=function(actual,predicted){sqrt(mean((actual-predicted)^2))}
+
+```
+#q7
+```{r}
+Boston_tree_pred=predict(Boston_tree,newdata=Boston_test)
+rmse(Boston_tree_pred,Boston_test$medv)
+```
+#q8
+```{r}
+Boston_lm<-lm(medv ~.,data=Boston_test)
+Boston_lm_pred=predict(Boston_lm,newdata=Boston_test)
+rmse(Boston_lm_pred,Boston_test$medv)
+
+```
+
+#q9
+
+```{r}
+par(mfrow=c(1,2))
+plot(Boston_tree_pred, Boston_test$medv, 
+     xlab = "Predicted", ylab = "Actual", 
+     main = "Predicted vs Actual: Single Tree, Test Data",
+     col = "#cd0050", pch = 20)
+grid()
+abline(0, 1, col = "dodgerblue", lwd = 2)
+plot(Boston_lm_pred, Boston_test$medv,
+     xlab = "Predicted", ylab = "Actual",
+     main = "Predicted vs Actual: Linear Model, Test Data",
+     col = "#cd0050", pch = 20)
+grid()
+abline(0, 1, col = "dodgerblue", lwd = 2)
+
+```
+
+#q10
+```{r}
+library(randomForest)
+
+Boston_bagging= randomForest(medv~.,data=Boston_train,mytry=13,importance=TRUE,ntrees=500)
+Boston_bagging
+```
+
+#q11
+```{r}
+Boston_bagging_pred=predict(Boston_bagging,newdata=Boston_test)
+rmse(Boston_bagging_pred,Boston_test$medv)
+plot(Boston_bagging, col = "#cd0050", lwd = 2, main = "Bagged Trees: Error vs Number of Trees")
+grid()
+
+```
+
+#q12
+```{r}
+
+
+Boston_bagging2= randomForest(medv~.,data=Boston_train,mytry=4,importance=TRUE,ntrees=500)
+Boston_bagging2
+```
+
+```{r}
+Boston_bagging_pred2=predict(Boston_bagging2,newdata=Boston_test)
+rmse(Boston_bagging_pred2,Boston_test$medv)
+plot(Boston_bagging2, col = "#cd0050", lwd = 2, main = "Bagged Trees: Error vs Number of Trees")
+grid()
+
+```
+
+#q13
+
+```{r}
+importance(Boston_bagging2, type = 1)
+varImpPlot(Boston_bagging2)
+
+
+```
+
+#q15
+
+
+```{r}
+library(gbm)
+Boston_boost=gbm(medv~.,data= Boston_train,distribution="gaussian",interaction.depth=4,shrinkage= 0.01)
+Boston_boost_pred=predict(Boston_boost,newdata=Boston_test)
+
+rmse(Boston_boost_pred,Boston_test$medv)
+
+```
+#BONUS
+```{r}
+library(xgboost)
+
+train_x = data.matrix(Boston_train[, -13])
+train_y = Boston_train[,13]
+
+test_x = data.matrix(Boston_test[, -13])
+test_y = Boston_test[, 13]
+
+xgb_train = xgb.DMatrix(data = train_x, label = train_y)
+xgb_test = xgb.DMatrix(data = test_x, label = test_y)
+
+xgbc = xgboost(data = xgb_train, max.depth = 2, nrounds = 50)
+
+
+Boston_xgboost_pred = predict(xgbc, xgb_test)
+
+rmse(Boston_xgboost_pred, Boston_test$medv)
+
+
+```
+
+#q17
+```{r}
+par(mfrow=c(2,2))
+plot(Boston_tree_pred, Boston_test$medv, 
+     xlab = "Predicted", ylab = "Actual", 
+     main = "Predicted vs Actual: Single Tree, Test Data",
+     col = "#cd0050", pch = 20)
+grid()
+abline(0, 1, col = "dodgerblue", lwd = 2)
+plot(Boston_bagging_pred, Boston_test$medv,
+     xlab = "Predicted", ylab = "Actual",
+     main = "Bagging, Test Data",
+     col = "#cd0050", pch = 20)
+grid()
+abline(0, 1, col = "dodgerblue", lwd = 2)
+plot(Boston_bagging_pred2, Boston_test$medv,
+     xlab = "Predicted", ylab = "Actual",
+     main = "Random Forest, Test Data",
+     col = "#cd0050", pch = 20)
+grid()
+abline(0, 1, col = "dodgerblue", lwd = 2)
+plot(Boston_boost_pred, Boston_test$medv,
+     xlab = "Predicted", ylab = "Actual",
+     main = "Boosting, Test Data",
+     col = "#cd0050", pch = 20)
+grid()
+abline(0, 1, col = "dodgerblue", lwd = 2)
+```
